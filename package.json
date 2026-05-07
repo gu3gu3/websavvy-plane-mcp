@@ -1,0 +1,30 @@
+{
+  "name": "websavvy-plane-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for Plane.so — workspaces, projects, work-items, states, and workflows",
+  "type": "module",
+  "bin": {
+    "websavvy-plane-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "inspector": "npx @modelcontextprotocol/inspector dist/index.js",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "keywords": ["mcp", "plane.so", "ai-agent", "context-protocol"],
+  "author": "WebSavvy Solutions <moises@websavvy-solutions.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
