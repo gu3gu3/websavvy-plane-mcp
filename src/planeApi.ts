@@ -212,26 +212,28 @@ export async function updateIssue(
   };
 }
 
+function normalizeUser(item: Record<string, unknown>): User {
+  const member =
+    (item.member as Record<string, unknown> | undefined) ??
+    (item.member_details as Record<string, unknown> | undefined) ??
+    (item.user as Record<string, unknown> | undefined) ??
+    item;
+  const firstName = String(member.first_name ?? "");
+  const lastName = String(member.last_name ?? "");
+  return {
+    id: String(member.id ?? item.id),
+    displayName: String(
+      member.display_name ?? `${firstName} ${lastName}`.trim() ?? member.email ?? "User"
+    ),
+    email: member.email ? String(member.email) : undefined,
+  };
+}
+
 export async function getUsers(workspaceSlug: string): Promise<User[]> {
-  const data = await planeFetch<PlaneList<Record<string, unknown>>>(
+  const data = await planeFetch<PlaneList<Record<string,unknown>>>(
     `${apiPrefix}/workspaces/${workspaceSlug}/members/`
   );
-  return unwrapList(data).map((item) => {
-    const member =
-      (item.member as Record<string, unknown> | undefined) ??
-      (item.member_details as Record<string, unknown> | undefined) ??
-      (item.user as Record<string, unknown> | undefined) ??
-      item;
-    const firstName = String(member.first_name ?? "");
-    const lastName = String(member.last_name ?? "");
-    return {
-      id: String(member.id ?? item.id),
-      displayName: String(
-        member.display_name ?? `${firstName} ${lastName}`.trim() ?? member.email ?? "User"
-      ),
-      email: member.email ? String(member.email) : undefined,
-    };
-  });
+  return unwrapList(data).map(normalizeUser);
 }
 
 export async function getStates(workspaceSlug: string, projectId: string): Promise<State[]> {
@@ -265,6 +267,43 @@ export async function createState(
     color: data.color ? String(data.color) : undefined,
     projectId: data.project_id ? String(data.project_id) : undefined,
   };
+}
+
+export async function addProjectMember(
+  workspaceSlug: string,
+  projectId: string,
+  memberId: string,
+  role = 15
+): Promise<{ id: string; member: string; role: number }> {
+  return planeFetch(`${apiPrefix}/workspaces/${workspaceSlug}/projects/${projectId}/members/`, {
+    method: "POST",
+    body: JSON.stringify({ member: memberId, role }),
+  });
+}
+
+export async function removeProjectMember(
+  workspaceSlug: string,
+  projectId: string,
+  membershipId: string
+): Promise<void> {
+  await planeFetch(
+    `${apiPrefix}/workspaces/${workspaceSlug}/projects/${projectId}/members/${membershipId}/`,
+    { method: "DELETE" }
+  );
+}
+
+export async function getProjectMembers(workspaceSlug: string, projectId: string): Promise<User[]> {
+  const data = await planeFetch<PlaneList<Record<string, unknown>>>(
+    `${apiPrefix}/workspaces/${workspaceSlug}/projects/${projectId}/members/`
+  );
+  return unwrapList(data).map(normalizeUser);
+}
+
+export async function deleteIssue(workspaceSlug: string, projectId: string, issueId: string): Promise<void> {
+  await planeFetch(
+    `${apiPrefix}/workspaces/${workspaceSlug}/projects/${projectId}/work-items/${issueId}/`,
+    { method: "DELETE" }
+  );
 }
 
 export async function healthCheck(): Promise<{ ok: boolean; message: string }> {
